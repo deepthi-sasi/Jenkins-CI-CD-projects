@@ -36,9 +36,9 @@ Step 4: Initialize Jenkins
 Copy the initial administrator password:
 
 # in the docker container
-`docker exec -it <container-id> bash`
+docker exec -it <container-id> bash
 
-`cat /var/jenkins_home/secrets/initialAdminPassword`
+cat /var/jenkins_home/secrets/initialAdminPassword
 
 # or directly on the host
 
