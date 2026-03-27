@@ -228,9 +228,10 @@ stage("Build and Publish Docker Image") {
 
 Go to "Dashboard" > "devops-bootcamp-pipeline" > "Build Now"). Then go to your private repository on DockerHub and check if the new image got pushed.
 
-Steps to create a Multibranch Pipeline Job
+### Steps to create a Multibranch Pipeline Job
+
 Step 1: Create a new Multibranch Pipeline Job
-Go to "Dashboard" > "New Item", enter an item name (e.g. devops-bootcamp-multibranch-pipeline), select the "Multibranch Pipeline" area and press the "Ok" button.
+Go to "Dashboard" > "New Item", enter an item name (e.g. my-multibranch-pipeline), select the "Multibranch Pipeline" area and press the "Ok" button.
 
 Step 2: Connect to the application’s git repository
 On the configuration page, go to the "Branch Sources" section and select "Git" from the "Add source" dropdown. Enter the URL of the GitHub repository holding the Java Maven application (https://github.com/deepthi-sasi/java-maven-app). Choose the credentials created in step 1 of the Freestyle project above. Open the "Add" dropdown under "Discover branches" and select "Filter by name (with regular expression)". Enter .* to select all branches.
