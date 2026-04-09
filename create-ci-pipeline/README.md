@@ -201,16 +201,21 @@ Save the build configuration and run the build ("Dashboard" > "devops-bootcamp-f
 
 ### Steps to create a Pipeline Job
 
-Step 1: Create a new Pipeline Job
-Go to "Dashboard" > "New Item", enter an item name (e.g. devops-bootcamp-pipeline), select the "Pipeline" area and press the "Ok" button.
+Step 1: Create a New Pipeline Job
 
-Step 2: Connect to the application’s git repository
-On the configuration page, go to the Pipeline section and select "Pipeline script from SCM". Select "Git" from the SCM dropdown, enter the URL of the GitHub repository holding the Java Maven application (https://github.com/deepthi-sasi/java-maven-app). Choose the credentials created in step 1 of the Freestyle project above.
+Go to Dashboard → New Item
+Enter an item name (e.g. devops-bootcamp-pipeline), select Pipeline and click OK
 
-In the "Branches to build" section, enter "*/main" as branch specifier and press the "Save" button.
+Step 2: Connect to the GitHub Repository
 
-Step 3: Build Jar
-Add the following Jenkinsfile to your project source, which builds the application using maven:
+On the configuration page, go to the Pipeline section and select Pipeline script from SCM
+Select Git from the SCM dropdown
+Enter the repository URL: https://github.com/deepthi-sasi/java-maven-app
+Select the GitHub credentials configured earlier
+Under Branches to build, set the branch specifier to */main and click Save
+
+Step 3: Build the JAR via Jenkinsfile
+Add a Jenkinsfile to your project root to define the pipeline. The file should include a stage to build the application using Maven:
 
     pipeline {
         agent any
