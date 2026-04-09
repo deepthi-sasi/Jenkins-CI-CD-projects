@@ -119,22 +119,22 @@ Now Jenkins can use the docker command in builds.
 ```
 ### Steps to create Jenkins credentials for the GitHub repository
 ### Step 1: Create a GitHub access token
-Step 1: Create a GitHub Personal Access Token
+
 GitHub no longer supports username/password authentication. To generate a token:
 
-Go to GitHub → Profile → Settings → Developer settings → Personal access tokens → Tokens (classic)
-Click Generate new token (classic)
-Enter a token name (e.g. devops-bootcamp-jenkins), set an expiration date, and check the repo scope
-Click Generate token and copy it immediately — it won't be shown again
+1. Go to GitHub → Profile → Settings → Developer settings → Personal access tokens → Tokens (classic)
+2. Click Generate new token (classic)
+3. Enter a token name (e.g. devops-bootcamp-jenkins), set an expiration date, and check the repo scope
+4. Click Generate token and copy it immediately — it won't be shown again
 
 
 Step 2: Add GitHub Credentials to Jenkins
 
-Go to Manage Jenkins → Manage Credentials → Stores scoped to Jenkins → System → Global credentials (unrestricted)
-Click Add Credentials
-Set the kind to Username with password, scope to Global
-Enter your GitHub username and the token as the password
-Add an ID (e.g. GitHub) and click Create
+1. Go to Manage Jenkins → Manage Credentials → Stores scoped to Jenkins → System → Global credentials (unrestricted)
+2. Click Add Credentials
+3. Set the kind to Username with password, scope to Global
+4. Enter your GitHub username and the token as the password
+5. Add an ID (e.g. GitHub) and click Create
 
 
 This is ready to paste straight into your GitHub README. Want me to adjust the formatting or tone at all?
