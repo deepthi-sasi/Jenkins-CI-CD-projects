@@ -174,7 +174,10 @@ ENTRYPOINT ["java", "-jar", "java-app-1.0-SNAPSHOT.jar"]
 
 ```
 In the Jenkins job, add an Execute shell build step with:
-```docker build -t java-maven-app:1.0.0 .
+
+```
+docker build -t java-maven-app:1.0.0 .
+
 ```
 
 Step 5: Configure credentials for the private DockerHub repository
