@@ -25,7 +25,8 @@ CI Pipeline for a Java Maven application to build and push to the repository.
     a. Connect to the application’s git repository
     b. Build Jar
     c. Build Docker Image
-    d. Push to private DockerHub repository```
+    d. Push to private DockerHub repository
+    ```
 
 ### Steps to install Maven and Node in Jenkins
 Step 1: Install Maven Plugin
@@ -164,16 +165,17 @@ ENTRYPOINT ["java", "-jar", "java-app-1.0-SNAPSHOT.jar"]
 In the Jenkins job add an "Execute shell" step to the build steps and enter the command docker build -t java-maven-app:1.0.0 ..
 
 Step 5: Configure credentials for the private DockerHub repository
-1.Go to Dashboard → Manage Jenkins → Manage Credentials → Stores scoped to Jenkins → Jenkins → Global credentials
-2.Click Add Credentials
-3.Enter your DockerHub username, password, and an ID (e.g. DockerHub)
+1. Go to Dashboard → Manage Jenkins → Manage Credentials → Stores scoped to Jenkins → Jenkins → Global credentials
+2. Click Add Credentials
+3. Enter your DockerHub username, password, and an ID (e.g. DockerHub)
 
 
 Step 6: Push to private DockerHub repository
-1.Open your Jenkins build configuration and go to the Build Environment section 
-2.Check Use secret text(s) or file(s)
-3.Add a Username and password (separated) binding and define environment variable names (e.g. USERNAME and PASSWORD), then select the DockerHub credentials
-4.In the Build section (Execute shell), update the image tag to match your private repo (e.g. docker build -t <your-repo>/<image-name>:<tag> .) and add commands to log in and push:
+1. Open your Jenkins build configuration and go to the Build Environment section 
+2. Check Use secret text(s) or file(s)
+3. Add a Username and password (separated) binding and define environment variable names (e.g. USERNAME and PASSWORD), then select the DockerHub credentials
+4. In the Build section (Execute shell), update the image tag to match your private repo (e.g. `docker build -t <your-repo>/<image-name>:<tag> .`) and add commands to log in and push:
+
 ```
 docker build -t deepthisasi/demo-app:1.1 .
 echo $PASSWORD | docker login -u $USERNAME --password-stdin
