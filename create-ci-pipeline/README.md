@@ -208,11 +208,11 @@ Enter an item name (e.g. devops-bootcamp-pipeline), select Pipeline and click OK
 
 Step 2: Connect to the GitHub Repository
 
-On the configuration page, go to the Pipeline section and select Pipeline script from SCM
-Select Git from the SCM dropdown
-Enter the repository URL: https://github.com/deepthi-sasi/java-maven-app
-Select the GitHub credentials configured earlier
-Under Branches to build, set the branch specifier to */main and click Save
+1. On the configuration page, go to the Pipeline section and select Pipeline script from SCM
+2. Select Git from the SCM dropdown
+3. Enter the repository URL: https://github.com/deepthi-sasi/java-maven-app
+4. Select the GitHub credentials configured earlier
+5. Under Branches to build, set the branch specifier to */main and click Save
 
 Step 3: Build the JAR via Jenkinsfile
 Add a Jenkinsfile to your project root to define the pipeline. The file should include a stage to build the application using Maven:
@@ -271,12 +271,10 @@ Go to "Dashboard" > "devops-bootcamp-pipeline" > "Build Now"). Then go to your p
 
 ### Steps to create a Multibranch Pipeline Job
 
-Step 1: Create a new Multibranch Pipeline Job
-Go to "Dashboard" > "New Item", enter an item name (e.g. my-multibranch-pipeline), select the "Multibranch Pipeline" area and press the "Ok" button.
+1. On the configuration page, go to the Branch Sources section and select Git from the Add source dropdown
+2. Enter the repository URL: https://github.com/deepthi-sasi/java-maven-app
+3. Select the GitHub credentials configured earlier
+4. Under Discover branches, click Add and select Filter by name (with regular expression), then enter .* to include all branches
+5. Click Save — Jenkins will automatically scan the repository, detect all branches containing a Jenkinsfile, create the corresponding pipelines and trigger the builds
 
-Step 2: Connect to the application’s git repository
-On the configuration page, go to the "Branch Sources" section and select "Git" from the "Add source" dropdown. Enter the URL of the GitHub repository holding the Java Maven application (https://github.com/deepthi-sasi/java-maven-app). Choose the credentials created in step 1 of the Freestyle project above. Open the "Add" dropdown under "Discover branches" and select "Filter by name (with regular expression)". Enter .* to select all branches.
 
-As soon as you press the "Save" button, Jenkins scans the Git repository for all branches containing a Jenkinsfile, creates related pipelines and starts the builds.
-
-Because we already added a Dockerfile and Jenkinsfile to the project sources, the final build workflow is already set up and the build is executed. There's nothing left to do for steps 3 to 6 (see Pipeline job above).
