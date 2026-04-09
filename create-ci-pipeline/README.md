@@ -139,19 +139,29 @@ Add an ID (e.g. GitHub) and click Create
 
 This is ready to paste straight into your GitHub README. Want me to adjust the formatting or tone at all?
 ### Steps to create a Freestyle Job
-Step 1: Create a new Freestyle Job
-Go to "Dashboard" > "New Item", enter an item name (e.g. devops-bootcamp-freestyle), select the "Freestyle project" area and press the "Ok" button.
+Step 1: Create a New Freestyle Job
 
-Step 2: Connect to the application’s git repository
-On the configuration page, go to the Source Code Management section and select "Git". Enter the URL of the GitHub repository holding the Java Maven application (https://github.com/deepthi-sasi/java-maven-app). Choose the credentials created in step 1.
+Go to Dashboard → New Item
+Enter an item name (e.g. devops-bootcamp-freestyle), select Freestyle project and click OK
 
-In the "Branches to build" section, enter "*/main" as branch specifier and press the "Save" button.
 
-Step 3: Build Jar
-Go to "Dashboard" > "devops-bootcamp-freestyle" > "Configure" > "Build Steps" and select "Invoke top-level Maven targets" from the "Add build step" dropdown. Select a Maven version (maven-3.9) and enter the goal "package". Press the "Save" button.
+Step 2: Connect to the GitHub Repository
 
-Step 4: Build Docker Image
-Add the following Dockerfile to your project sources, which builds a Docker image from the final Maven build artifact and commit/push it to the GitHub repository:
+On the configuration page, go to Source Code Management and select Git
+Enter the repository URL: https://github.com/deepthi-sasi/java-maven-app
+Select the GitHub credentials configured earlier
+Under Branches to build, set the branch specifier to */main and click Save
+
+
+Step 3: Build the JAR
+
+Go to Dashboard → Configure → Build Steps
+From the Add build step dropdown, select Invoke top-level Maven targets
+Select Maven version (e.g. maven-3.9), enter the goal package and click Save
+
+
+Step 4: Build the Docker Image
+Add the following Dockerfile to your project root, then commit and push it to GitHub:
 ```
 FROM amazoncorretto:17-alpine-jdk
 
@@ -161,8 +171,11 @@ COPY ./build/libs/java-app-1.0-SNAPSHOT.jar /usr/app
 WORKDIR /usr/app
 
 ENTRYPOINT ["java", "-jar", "java-app-1.0-SNAPSHOT.jar"]
+
 ```
-In the Jenkins job add an "Execute shell" step to the build steps and enter the command docker build -t java-maven-app:1.0.0 ..
+In the Jenkins job, add an Execute shell build step with:
+```docker build -t java-maven-app:1.0.0 .
+```
 
 Step 5: Configure credentials for the private DockerHub repository
 1. Go to Dashboard → Manage Jenkins → Manage Credentials → Stores scoped to Jenkins → Jenkins → Global credentials
