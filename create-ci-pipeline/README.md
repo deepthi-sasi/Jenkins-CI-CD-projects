@@ -170,7 +170,7 @@ Step 5: Configure credentials for the private DockerHub repository
 
 
 Step 6: Push to private DockerHub repository
-1.Open your Jenkins build configuration and go to the Build Environment section
+1.Open your Jenkins build configuration and go to the Build Environment section 
 2.Check Use secret text(s) or file(s)
 3.Add a Username and password (separated) binding and define environment variable names (e.g. USERNAME and PASSWORD), then select the DockerHub credentials
 4.In the Build section (Execute shell), update the image tag to match your private repo (e.g. docker build -t <your-repo>/<image-name>:<tag> .) and add commands to log in and push:
