@@ -118,13 +118,25 @@ Now Jenkins can use the docker command in builds.
 ```
 ### Steps to create Jenkins credentials for the GitHub repository
 ### Step 1: Create a GitHub access token
-GitHub does no longer support authentication via username/password. You have to create an access token.
+Step 1: Create a GitHub Personal Access Token
+GitHub no longer supports username/password authentication. To generate a token:
 
-Login to you GitHub account, open your profile > Settings > Developer settings > Personal access tokens > Tokens (classic) > Generate new token > Generate new token (classic). Enter a token name (e.g. devops-bootcamp-jenkins), choose an Expiration date, select the "Repo" check box and press the "Generate token" button. Copy the token (you won't be able to re-display it later).
+Go to GitHub → Profile → Settings → Developer settings → Personal access tokens → Tokens (classic)
+Click Generate new token (classic)
+Enter a token name (e.g. devops-bootcamp-jenkins), set an expiration date, and check the repo scope
+Click Generate token and copy it immediately — it won't be shown again
 
-Step 2: Add GitHub credentials
-Go to "Manage Jenkins" > "Manage Credentials" > "Stores scoped to Jenkins" > "System" > "Global credentials (unrestricted)" and press the "Add credentials" button. Select the kind "Username with password", the scope "Global", enter username and access token for the GitHub account, enter an ID (e.g. "GitHub") and press the "Create" button.
 
+Step 2: Add GitHub Credentials to Jenkins
+
+Go to Manage Jenkins → Manage Credentials → Stores scoped to Jenkins → System → Global credentials (unrestricted)
+Click Add Credentials
+Set the kind to Username with password, scope to Global
+Enter your GitHub username and the token as the password
+Add an ID (e.g. GitHub) and click Create
+
+
+This is ready to paste straight into your GitHub README. Want me to adjust the formatting or tone at all?
 ### Steps to create a Freestyle Job
 Step 1: Create a new Freestyle Job
 Go to "Dashboard" > "New Item", enter an item name (e.g. devops-bootcamp-freestyle), select the "Freestyle project" area and press the "Ok" button.
@@ -152,10 +164,16 @@ ENTRYPOINT ["java", "-jar", "java-app-1.0-SNAPSHOT.jar"]
 In the Jenkins job add an "Execute shell" step to the build steps and enter the command docker build -t java-maven-app:1.0.0 ..
 
 Step 5: Configure credentials for the private DockerHub repository
-For Jenkins to be able to push images to the private DockerHub repository, we need to configure the credentials. Go to "Dashboard" > "Manage Jenkins" > "Manage Credentials" > "Stores scoped to Jenkins" > "Jenkins" > "Global credentials" > "Add credentials" and enter your DockerHub username and password and an ID (e.g. DockerHub).
+1.Go to Dashboard → Manage Jenkins → Manage Credentials → Stores scoped to Jenkins → Jenkins → Global credentials
+2.Click Add Credentials
+3.Enter your DockerHub username, password, and an ID (e.g. DockerHub)
+
 
 Step 6: Push to private DockerHub repository
-Now go back to the Jenkins build configuration and jump to the "Build Environment" section, select "Use secret text(s) or file(s)", add a "Username and password (separated)" binding, define the names of the environment variables holding the username and password (e.g. USERNAME and PASSWORD) and select the correct credentials. Now scroll down to the "Build" section (Execute shell), adjust the tag name of the applications image (docker build -t fsiegrist/fesi-repo:devops-bootcamp-java-maven-app-1.0.0 .) and add commands to login and push the image to the private repository:
+1.Open your Jenkins build configuration and go to the Build Environment section
+2.Check Use secret text(s) or file(s)
+3.Add a Username and password (separated) binding and define environment variable names (e.g. USERNAME and PASSWORD), then select the DockerHub credentials
+4.In the Build section (Execute shell), update the image tag to match your private repo (e.g. docker build -t <your-repo>/<image-name>:<tag> .) and add commands to log in and push:
 ```
 docker build -t deepthisasi/demo-app:1.1 .
 echo $PASSWORD | docker login -u $USERNAME --password-stdin
