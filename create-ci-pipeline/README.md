@@ -6,7 +6,7 @@
 
 ### Technologies Used
 
-* Jenkins 
+* Jenkins  
 * Docker
 * Linux
 * Git 
