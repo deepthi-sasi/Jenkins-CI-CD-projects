@@ -1,168 +1,205 @@
-## Demo Project - Create CI Pipeline (Freestyle, Pipeline, Multibranch Pipeline)
+# CI Pipeline — Freestyle, Pipeline & Multibranch Pipeline
 
-### Topics of the Demo Project
+> Build and publish a Java Maven application to a private DockerHub registry using three Jenkins job types — Freestyle, Pipeline, and Multibranch Pipeline.
 
-### Create a CI pipeline using chained freestyle jobs, a pipeline and a multibranch pipeline.
+![Jenkins](https://img.shields.io/badge/Jenkins-LTS-D24939?logo=jenkins&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
+![Java](https://img.shields.io/badge/Java-Maven-C71A36?logo=apachemaven&logoColor=white)
+![Git](https://img.shields.io/badge/Git-GitHub-181717?logo=github&logoColor=white)
 
-### Technologies Used
+---
 
-* Jenkins  
-* Docker
-* Linux
-* Git 
-* Java 
-* Maven
+## Overview
 
-### Project Description
+This project demonstrates three different ways to create a CI pipeline in Jenkins for the same Java Maven application. Each job type builds the app, packages it as a Docker image, and pushes it to a private DockerHub registry.
 
-CI Pipeline for a Java Maven application to build and push to the repository.
+**Technologies used:** Jenkins · Docker · Linux · Git · Java · Maven
 
-* Install Build Tools (Maven, Node) in Jenkins 
-* Make Docker available on Jenkins server 
-* Create Jenkins credentials for a git repository 
-* Create different Jenkins job types (Freestyle, Pipeline, Multibranch pipeline) for the Java Maven project with Jenkinsfile to:
-    ```
-    a. Connect to the application’s git repository
-    b. Build Jar
-    c. Build Docker Image
-    d. Push to private DockerHub repository
-    ```
+### What this project covers
 
-### Steps to install Maven and Node in Jenkins
-Step 1: Install Maven Plugin
-For most of the usual build tools a related plugin is already installed. For Maven this is the case too. So we just have to configure the already installed plugin.
-Go to the "Manage Jenkins" section and click on "Global Tool Configuration". Click on the "Add Maven" buttton, enter a name (e.g. maven-3.9) and click on "Save". Now you have the maven command available in all Jenkins jobs.
+1. Install Maven and Node.js in Jenkins
+2. Mount Docker from the host into the Jenkins container
+3. Create GitHub credentials in Jenkins
+4. Create a **Freestyle** job — configure build steps via the Jenkins UI
+5. Create a **Pipeline** job — define the pipeline in a `Jenkinsfile`
+6. Create a **Multibranch Pipeline** job — auto-detect branches and run per-branch pipelines
 
-Step 2: Install npm and Node in the Jenkins container
-Enter the docker container as root user (because we need the privilege to install tools):
+### Job type comparison
 
-```docker exec -u 0 -it <container-id> bash
-Install curl:
+| | Freestyle | Pipeline | Multibranch Pipeline |
+|---|---|---|---|
+| Config location | Jenkins UI | `Jenkinsfile` in repo | `Jenkinsfile` in repo |
+| Version controlled | No | Yes | Yes |
+| Multi-branch support | No | No | Yes |
+| Best for | Quick one-off jobs | Single-branch pipelines | Feature branch workflows |
 
-apt update
-apt install curl
-```
-Install node:
-```
-# get information about the current Linux distribution
-cat /etc/issue
-# => e.g. 'Debian GNU/Linux 11 \n \l'
+---
 
-# lookup the matching URL to download a node install script, e.g. under
-# https://tecadmin.net/how-to-install-node-js-on-debian-11/
-# execute the following curl command
-curl -sL https://deb.nodesource.com/setup_18.x -o nodesource_setup.sh
+## Prerequisites
 
-# execute the install script and install node and npm
-bash nodesource_setup.sh
-apt-get install -y nodejs
+- Jenkins running as a Docker container on a Linux host
+- A GitHub account with a Java Maven application repository
+- A private DockerHub repository
 
-# check the versions
-node --version # v18.15.0
-npm --version # 9.5.0
-```
-Steps to make Docker available on Jenkins server
-Instead of installing Docker inside the Jenkins container, we mount the Docker runtime of the host system as a volume.
+---
 
-Step 1: Restart docker container with additional volumes
-Stop the running Jenkins container and restart it with the following command:
-```
-docker run -p 8080:8080 -p 50000:50000 -d \
--v jenkins_home:/var/jenkins_home \
--v /var/run/docker.sock:/var/run/docker.sock \
--v $(which docker):/usr/bin/docker \
-jenkins/jenkins:lts
-```
-Step 2: Provide jenkins user with missing file permission
-The docker command is now available in the Jenkins container. However, the user jenkins (under which Jenkins is running) has no read/write permissions on the file /var/run/docker.sock. So we have to enter the Jenkins container as root user and provide the missing permissions to the user jenkins:
-```
-# enter the docker container as root user
+## Step 1 — Install Maven and Node.js in Jenkins
+
+### Install Maven
+
+Maven is supported via a built-in plugin — no extra install needed, just configure it:
+
+1. Go to **Manage Jenkins** → **Global Tool Configuration**
+2. Scroll to the **Maven** section and press **Add Maven**
+3. Enter a name (e.g. `maven-3.9`) and press **Save**
+
+Maven is now available by name in all Jenkins jobs.
+
+### Install Node.js and npm
+
+Node must be installed directly inside the Jenkins container:
+
+```bash
+# Enter the Jenkins container as root
 docker exec -u 0 -it <container-id> bash
 
-# provide missing permissions and exit
-chmod 666 /var/run/docker.sock
+# Install curl
+apt update
+apt install curl
+
+# Check your Linux distribution
+cat /etc/issue
+# e.g. Debian GNU/Linux 11
+
+# Download and run the Node.js 18 setup script
+curl -sL https://deb.nodesource.com/setup_18.x -o nodesource_setup.sh
+bash nodesource_setup.sh
+
+# Install Node.js and npm
+apt-get install -y nodejs
+
+# Verify
+node --version   # v18.15.0
+npm --version    # 9.5.0
+
 exit
 ```
-Check if jenkins user can execute docker commands
 
-```docker exec -it <container-id> bash
+---
+
+## Step 2 — Make Docker available on the Jenkins server
+
+Rather than installing Docker inside the container, mount the host's Docker runtime as a volume.
+
+### Restart Jenkins with Docker socket mounted
+
+```bash
+docker run -p 8080:8080 -p 50000:50000 -d \
+  -v jenkins_home:/var/jenkins_home \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v $(which docker):/usr/bin/docker \
+  jenkins/jenkins:lts
+```
+
+### Fix Docker socket permissions
+
+The `jenkins` user lacks write access to `/var/run/docker.sock` by default:
+
+```bash
+# Enter the container as root
+docker exec -u 0 -it <container-id> bash
+
+# Grant permissions
+chmod 666 /var/run/docker.sock
+exit
+
+# Verify jenkins user can run Docker commands
+docker exec -it <container-id> bash
 docker pull hello-world
 exit
 ```
 
-If that doesn't work and you get errors like
+### Troubleshooting: GLIBC version error
+
+If you see an error like:
 ```
-docker: /lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.32' not found (required by docker)
-you can try using Ubuntu 18.04 LTS as host system or you have to install the docker runtime in the container:
+docker: /lib/x86_64-linux-gnu/libc.so.6: version 'GLIBC_2.32' not found
 ```
 
-stop the running Jenkins container and restart it with the following command:
-```
+Install Docker inside the container instead of mounting the binary:
+
+```bash
 docker run -p 8080:8080 -p 50000:50000 -d \
--v jenkins_home:/var/jenkins_home \
--v /var/run/docker.sock:/var/run/docker.sock \
-jenkins/jenkins:lts
-```
+  -v jenkins_home:/var/jenkins_home \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  jenkins/jenkins:lts
 
- enter this docker container as root user and install docker
-```docker exec -u 0 -it <container-id> bash
+docker exec -u 0 -it <container-id> bash
 apt update
 apt install docker.io
 exit
 
-# check if jenkins user can execute docker commands
+# Verify
 docker exec -it <container-id> bash
 docker pull hello-world
 exit
-Now Jenkins can use the docker command in builds.
-
 ```
-### Steps to create Jenkins credentials for the GitHub repository
-### Step 1: Create a GitHub access token
 
-GitHub no longer supports username/password authentication. To generate a token:
+---
 
-1. Go to GitHub → Profile → Settings → Developer settings → Personal access tokens → Tokens (classic)
-2. Click Generate new token (classic)
-3. Enter a token name (e.g. devops-bootcamp-jenkins), set an expiration date, and check the repo scope
-4. Click Generate token and copy it immediately — it won't be shown again
+## Step 3 — Create Jenkins credentials
 
+### GitHub access token
 
-Step 2: Add GitHub Credentials to Jenkins
+GitHub no longer supports password authentication. Create a personal access token:
 
-1. Go to Manage Jenkins → Manage Credentials → Stores scoped to Jenkins → System → Global credentials (unrestricted)
-2. Click Add Credentials
-3. Set the kind to Username with password, scope to Global
-4. Enter your GitHub username and the token as the password
-5. Add an ID (e.g. GitHub) and click Create
+1. GitHub → **Settings** → **Developer settings** → **Personal access tokens** → **Tokens (classic)** → **Generate new token (classic)**
+2. Enter a name (e.g. `devops-bootcamp-jenkins`), set an expiry, select the **repo** scope
+3. Press **Generate token** and copy it immediately
 
+### Add GitHub credentials to Jenkins
 
-This is ready to paste straight into your GitHub README. Want me to adjust the formatting or tone at all?
-### Steps to create a Freestyle Job
-Step 1: Create a New Freestyle Job
+1. **Manage Jenkins** → **Manage Credentials** → **System** → **Global credentials** → **Add credentials**
+2. Configure:
+  - **Kind:** `Username with password`
+  - **Username:** your GitHub username
+  - **Password:** the personal access token
+  - **ID:** `GitHub`
+3. Press **Create**
 
-Go to Dashboard → New Item
-Enter an item name (e.g. devops-bootcamp-freestyle), select Freestyle project and click OK
+### Add DockerHub credentials to Jenkins
 
+1. **Manage Jenkins** → **Manage Credentials** → **Global credentials** → **Add credentials**
+2. Configure:
+  - **Kind:** `Username with password`
+  - **Username:** your DockerHub username
+  - **Password:** your DockerHub password
+  - **ID:** `DockerHub`
+3. Press **Create**
 
-Step 2: Connect to the GitHub Repository
+---
 
-On the configuration page, go to Source Code Management and select Git
-Enter the repository URL: https://github.com/deepthi-sasi/java-maven-app
-Select the GitHub credentials configured earlier
-Under Branches to build, set the branch specifier to */main and click Save
+## Freestyle Job
 
+The Freestyle job configures all build steps through the Jenkins UI — no `Jenkinsfile` required.
 
-Step 3: Build the JAR
+### Create the job
 
-Go to Dashboard → Configure → Build Steps
-From the Add build step dropdown, select Invoke top-level Maven targets
-Select Maven version (e.g. maven-3.9), enter the goal package and click Save
+**Dashboard** → **New Item** → enter name `devops-bootcamp-freestyle` → select **Freestyle project** → **OK**
 
+### Connect to the Git repository
 
-Step 4: Build the Docker Image
-Add the following Dockerfile to your project root, then commit and push it to GitHub:
-```
+In **Source Code Management**, select **Git**, enter your repository URL and choose the `GitHub` credentials. Set branch to `*/main`.
+
+### Build the JAR
+
+In **Build Steps**, add **Invoke top-level Maven targets**, select `maven-3.9`, set goal to `package`.
+
+### Add the Dockerfile
+
+Add the following `Dockerfile` to your project root and push it to the repository:
+
+```dockerfile
 FROM amazoncorretto:17-alpine-jdk
 
 EXPOSE 8080
@@ -171,110 +208,129 @@ COPY ./build/libs/java-app-1.0-SNAPSHOT.jar /usr/app
 WORKDIR /usr/app
 
 ENTRYPOINT ["java", "-jar", "java-app-1.0-SNAPSHOT.jar"]
-
-```
-In the Jenkins job, add an Execute shell build step with:
-
-```
-docker build -t java-maven-app:1.0.0 .
-
 ```
 
-Step 5: Configure credentials for the private DockerHub repository
-1. Go to Dashboard → Manage Jenkins → Manage Credentials → Stores scoped to Jenkins → Jenkins → Global credentials
-2. Click Add Credentials
-3. Enter your DockerHub username, password, and an ID (e.g. DockerHub)
+### Build and push the Docker image
 
+1. In **Build Environment**, enable **Use secret text(s) or file(s)**
+2. Add a **Username and password (separated)** binding with variable names `USERNAME` and `PASSWORD`, linked to the `DockerHub` credential
+3. In **Build Steps**, add an **Execute shell** step:
 
-Step 6: Push to private DockerHub repository
-1. Open your Jenkins build configuration and go to the Build Environment section 
-2. Check Use secret text(s) or file(s)
-3. Add a Username and password (separated) binding and define environment variable names (e.g. USERNAME and PASSWORD), then select the DockerHub credentials
-4. In the Build section (Execute shell), update the image tag to match your private repo (e.g. `docker build -t <your-repo>/<image-name>:<tag> .`) and add commands to log in and push:
-
-```
+```bash
 docker build -t deepthisasi/demo-app:1.1 .
 echo $PASSWORD | docker login -u $USERNAME --password-stdin
 docker push deepthisasi/demo-app:1.1
 ```
-Save the build configuration and run the build ("Dashboard" > "devops-bootcamp-freestyle" > "Build Now"). Then go to your private repository on DockerHub and check if the new image got pushed.
 
-### Steps to create a Pipeline Job
+Press **Save** and run the build via **Build Now**. Verify the image appears in your DockerHub repository.
 
-Step 1: Create a New Pipeline Job
+---
 
-Go to Dashboard → New Item
-Enter an item name (e.g. devops-bootcamp-pipeline), select Pipeline and click OK
+## Pipeline Job
 
-Step 2: Connect to the GitHub Repository
+The Pipeline job reads its build definition from a `Jenkinsfile` stored in the Git repository — fully version controlled.
 
-1. On the configuration page, go to the Pipeline section and select Pipeline script from SCM
-2. Select Git from the SCM dropdown
-3. Enter the repository URL: https://github.com/deepthi-sasi/java-maven-app
-4. Select the GitHub credentials configured earlier
-5. Under Branches to build, set the branch specifier to */main and click Save
+### Create the job
 
-Step 3: Build the JAR via Jenkinsfile
-Add a Jenkinsfile to your project root to define the pipeline. The file should include a stage to build the application using Maven:
+**Dashboard** → **New Item** → enter name `devops-bootcamp-pipeline` → select **Pipeline** → **OK**
 
-    pipeline {
-        agent any
-        tools {
-            maven 'maven-3.9'
-        }
-        stages {
-            stage("Build Application JAR") {
-                steps {
-                    script {
-                        echo "building the application..."
-                        sh 'mvn package'
-                    }       
+### Connect to the Git repository
+
+In the **Pipeline** section, select **Pipeline script from SCM** → **Git**. Enter your repository URL, choose the `GitHub` credential, and set branch to `*/main`.
+
+### Jenkinsfile
+
+Add the following `Jenkinsfile` to your project root and push it to the repository:
+
+```groovy
+pipeline {
+    agent any
+    tools {
+        maven 'maven-3.9'
+    }
+    stages {
+        stage('Build Application JAR') {
+            steps {
+                script {
+                    echo 'building the application...'
+                    sh 'mvn package'
                 }
             }
-        }   
-    }
-Step 4: Build Docker Image
-Add the same Dockerfile to your project sources as in step 4 of the freestyle job above. But instead of adding an "Execute shell" step in the build configuration, add the following stage to the Jenkinsfile:
-
-    
-    stage("Build Docker Image") {
-        steps {
-          script {
-              echo "building the docker image..."
-              sh 'docker build -t java-maven-app:1.0.0 .'
-          }
         }
-    }
-  
-Step 5: Configure credentials for the private DockerHub repository
-See step 5 of the freestyle job above.
+        stage('Build and Publish Docker Image') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(
+                        credentialsId: 'DockerHub',
+                        usernameVariable: 'USERNAME',
+                        passwordVariable: 'PASSWORD'
+                    )]) {
+                        echo 'building the docker image...'
+                        sh 'docker build -t deepthisasi/demo-app:javamavenapp1.1 .'
 
-Step 6: Push to private DockerHub repository
-Replace the "Build Docker Image" stage with the following stage to build, login and push the image to the private repository:
-```
-stage("Build and Publish Docker Image") {
-    steps {
-      script {
-        withCredentials([usernamePassword(credentialsId: 'DockerHub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-          echo "building the docker image..."
-          sh 'docker build -t deepthisasi/demo-app:javamavenapp1.1 .'
-          echo "publishing the docker image..."
-          sh "echo $PASSWORD | docker login -u $USERNAME --password-stdin"
-          sh 'docker push deepthisasi/demo-app:javamavenapp1.1'
+                        echo 'publishing the docker image...'
+                        sh 'echo $PASSWORD | docker login -u $USERNAME --password-stdin'
+                        sh 'docker push deepthisasi/demo-app:javamavenapp1.1'
+                    }
+                }
+            }
         }
-      }
     }
 }
 ```
 
-Go to "Dashboard" > "devops-bootcamp-pipeline" > "Build Now"). Then go to your private repository on DockerHub and check if the new image got pushed.
+Run the build via **Build Now** and verify the image in DockerHub.
 
-### Steps to create a Multibranch Pipeline Job
+---
 
-1. On the configuration page, go to the Branch Sources section and select Git from the Add source dropdown
-2. Enter the repository URL: https://github.com/deepthi-sasi/java-maven-app
-3. Select the GitHub credentials configured earlier
-4. Under Discover branches, click Add and select Filter by name (with regular expression), then enter .* to include all branches
-5. Click Save — Jenkins will automatically scan the repository, detect all branches containing a Jenkinsfile, create the corresponding pipelines and trigger the builds
+## Multibranch Pipeline Job
 
+The Multibranch Pipeline automatically discovers all branches in the repository that contain a `Jenkinsfile` and creates a separate pipeline for each.
 
+### Create the job
+
+**Dashboard** → **New Item** → enter name `my-multibranch-pipeline` → select **Multibranch Pipeline** → **OK**
+
+### Connect to the Git repository
+
+1. In **Branch Sources**, press **Add source** → **Git**
+2. Enter your repository URL and choose the `GitHub` credential
+3. Under **Discover branches**, press **Add** → **Filter by name (with regular expression)**
+4. Enter `.*` to match all branches
+5. Press **Save**
+
+Jenkins will immediately scan the repository, detect all branches containing a `Jenkinsfile`, create a pipeline per branch, and trigger the first builds automatically.
+
+> No additional steps are needed — the `Dockerfile` and `Jenkinsfile` already added for the Pipeline job are reused here.
+
+---
+
+## Project structure
+
+```
+.
+├── Jenkinsfile         # Pipeline definition (used by Pipeline and Multibranch jobs)
+├── Dockerfile          # Docker image build instructions
+├── pom.xml             # Maven build configuration
+└── src/                # Java application source code
+```
+
+---
+
+## Potential improvements
+
+- **Parameterise the image tag** — replace hardcoded tags like `1.1` with a dynamic value derived from the Maven version or Git commit SHA
+- **Add a test stage** — insert `mvn test` between the build and publish stages to catch failures before pushing an image
+- **Use a shared library** — extract common pipeline logic (Docker login, build, push) into a Jenkins shared library to avoid duplication across jobs
+- **Scan on push** — configure the multibranch pipeline to trigger on webhook events rather than polling, for faster feedback
+- **Branch-specific behaviour** — use `when { branch 'main' }` conditions in the Jenkinsfile to restrict the publish step to the main branch only
+
+---
+
+## References
+
+- [Jenkins Pipeline documentation](https://www.jenkins.io/doc/book/pipeline/)
+- [Jenkins Multibranch Pipeline](https://www.jenkins.io/doc/book/pipeline/multibranch/)
+- [Jenkins credentials plugin](https://www.jenkins.io/doc/book/using/using-credentials/)
+- [GitHub personal access tokens](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token)
+- [Docker socket binding in Jenkins](https://www.jenkins.io/doc/book/installing/docker/)
