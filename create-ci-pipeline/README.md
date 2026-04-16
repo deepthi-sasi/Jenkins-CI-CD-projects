@@ -24,6 +24,7 @@ This project demonstrates three different ways to create a CI pipeline in Jenkin
 5. Create a **Pipeline** job — define the pipeline in a `Jenkinsfile`
 6. Create a **Multibranch Pipeline** job — auto-detect branches and run per-branch pipelines
 
+
 ### Job type comparison
 
 | | Freestyle | Pipeline | Multibranch Pipeline |
